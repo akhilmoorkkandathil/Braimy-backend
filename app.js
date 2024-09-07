@@ -75,9 +75,10 @@ app.use((req,res,next)=>{
     res.cookie('myCookie', 'Hello, this is my cookie!', { maxAge: 3600000 });
     next();
 });
+const mongoUri = `mongodb+srv://akhildasxyz:${process.env.MONGO_PASSWORD}@akhil1.ktzty9v.mongodb.net/BraimyDB?retryWrites=true&w=majority&appName=Akhil1`;
 
 function connectMongoDB(){
-    mongoose.connect(process.env.MONNGO_CONNECTION_STRING)
+    mongoose.connect(mongoUri)
 .then(()=>{
      console.log("Connected to Database!");
 })
