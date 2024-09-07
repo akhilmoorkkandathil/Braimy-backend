@@ -82,7 +82,7 @@ function connectMongoDB(){
 .then(()=>{
      console.log("Connected to Database!");
 })
-.catch((error)=>{
+.catch(()=>{
     app.use((req, res, next) => {
         return next(createError(402, "Service Unavailable: Please check your internet connection or try again later."));
     });
@@ -99,62 +99,12 @@ app.use('/coordinator',coordinatorRouter);
 app.use('/tutor',tutorRouter)
 
 
-// const io = new Server(server, {
-//     cors: {
-//         origin: process.env.BASE_URL_CLIENT,
-//         methods: ["GET", "POST"],
-//         credentials: true
-//     }
-// });
-
-// io.on('connection', (socket)=>{
-//     //console.log('socket io connected');
-//     socket.on('message', (data)=> {
-//         ////console.log(data);
-//         socket.broadcast.emit('received', {data: data, message: 'This is a test message from server'})
-//     })
-// })
-// initializeSocket(server);
-
-// const io = new Server(server, {
-//     cors: {
-//         origin: process.env.BASE_URL_CLIENT,
-//         methods: ["GET", "POST"],
-//         credentials: true
-//     }
-// }); 
-
-//  io.on('connection', (socket)=>{
-//     //console.log('socket io connected');
-//     socket.on('message', (data)=> {
-//         //console.log(data);
-//         socket.broadcast.emit('received', {data: data, message: 'This is a test message from server'})
-//     })
-// }) 
-
-
-
-// //Response Handler middleware
-// app.use((responseObj,req,res)=>{
-//   console.log("Helloooo......");
-//   console.log(responseObj);
-//     const statusCode = responseObj.status || 500;
-//     const message = responseObj.message || "Something went wrong!";
-//     return res.status(statusCode).json({
-//         success: [200,204,201].some(a=> a===statusCode)? true : false,
-//         status: statusCode,
-//         message: message,
-//         data: responseObj.data,
-//         token: responseObj.token
-//     });
-// });
-
 const server = http.createServer(app);
 
-const io = initializeSocket(server);
+initializeSocket(server);
 
 //Response Handler middleware
-app.use((responseObj,req,res,next)=>{
+app.use((responseObj,req,res)=>{
     const statusCode = responseObj.status || 500;
     const message = responseObj.message || "Something went wrong!";
     return res.status(statusCode).json({
