@@ -41,7 +41,7 @@ app.use(express.urlencoded({extended:true}));
 app.use(cookieParser());
 app.use(express.static('public'));
 
-const allowedOrigins = [process.env.BASE_URL_CLIENT,'http://127.0.0.1:8081','http://10.20.4.220:8081'];
+const allowedOrigins = ["http://16.171.148.207:4200",'http://127.0.0.1:8081','http://10.20.4.220:8081'];
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
