@@ -29,4 +29,4 @@ jobs:
       - name: Delete old container
         run: docker rm -f nodejs-app-container  
       - name: Run docker container
-        run: docker run -d -p 8000:4000 --name nodejs-app-container akhilmoorkkandathil/braimy-backed  
+        run: docker run -d -p 8000:8000 --name nodejs-app-container akhilmoorkkandathil/braimy-backed  

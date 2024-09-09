@@ -104,20 +104,20 @@ const server = http.createServer(app);
 initializeSocket(server);
 
 //Response Handler middleware
-app.use((responseObj,req,res)=>{
+app.use((responseObj,req,res,next)=>{
     const statusCode = responseObj.status || 500;
     const message = responseObj.message || "Something went wrong!";
-    return res.status(statusCode).json({
+    res.status(statusCode).json({
         success: [200,204,201].some(a=> a===statusCode)? true : false,
         status: statusCode,
         message: message,
         data: responseObj.data,
         token: responseObj.token
     });
+    next()
 });
 
 server.listen(8000, ()=>{
     connectMongoDB();
-    // console.log('Connected to backend');
 });
 
