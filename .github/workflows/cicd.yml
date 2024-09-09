@@ -12,7 +12,21 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
       - name: Create .env file
-        run: echo "MONGO_PASSWORD=${{ secrets.MONGO_PASSWORD }}" >> .env
+        run: |
+          echo "BASE_URL_CLIENT=http://localhost:4200" >> .env
+          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
+          echo "MONGO_PASSWORD=${{ secrets.MONGO_PASSWORD }}" >> .env
+          echo "EMAIL_USER=${{ secrets.EMAIL_USER }}" >> .env
+          echo "EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}" >> .env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+          echo "JWT_EXPIRES_IN=30" >> .env
+          echo "CLOUDNAME=${{ secrets.CLOUDNAME }}" >> .env
+          echo "CLOUDAPIKEY=${{ secrets.CLOUDAPIKEY }}" >> .env
+          echo "CLOUDINARYSECRET=${{ secrets.CLOUDINARYSECRET }}" >> .env
+          echo "PUBLIC_KEY=${{ secrets.PUBLIC_KEY }}" >> .env
+          echo "PRIVATE_KEY=${{ secrets.PRIVATE_KEY }}" >> .env
+          echo "RZP_KEY_ID=${{ secrets.RZP_KEY_ID }}" >> .env
+          echo "RZP_KEY_SECRET=${{ secrets.RZP_KEY_SECRET }}" >> .env
       - name: Login to docker hub
         run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}       
       - name: Build docker image
