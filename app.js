@@ -12,7 +12,7 @@ const userRouter = require('./routes/userRoutes');
 const tutorRouter = require('./routes/tutorRoutes');
 const coordinatorRouter = require('./routes/coordinatorRoutes');
 const adminRouter = require('./routes/adminRoutes');
-const {CreateError} = require('../backend/utils/error')
+const {CreateError} = require('./utils/socket')
 const initializeSocket = require('./utils/socket')
 
 const app = express();
