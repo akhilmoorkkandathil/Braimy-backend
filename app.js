@@ -33,6 +33,7 @@ function checkInternet(req, res, next) {
     });
 }
 
+
 // Apply the middleware globally
 app.use(checkInternet);
 app.use(express.json());
