@@ -4,8 +4,6 @@ const studentModel = require('../models/userModel')
 const {CreateSuccess} = require("../utils/success");
 const {CreateError} = require('../utils/error');
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const tutorRoute = require('../routes/tutorRoutes');
 const CompletedClass = require('../models/completedClassModel');
 const moment = require('moment');
 const commonMethods = require('../utils/commonMethods');
@@ -40,7 +38,7 @@ module.exports = {
             return next(CreateSuccess(200, 'Regsitration Successful.'));
             
         } catch (error) {
-            // console.log("Register error",  error);
+            console.log("Register error",  error);
         }
     },
     tutorLogin: async(req,res,next)=>{
@@ -80,10 +78,11 @@ module.exports = {
                 userName: tutor.username,
                 email: tutor.email
             };
-
+            console.log(token);
+            
             return next(CreateSuccess(200,"Login Success",tutorData,token));
         } catch (error) {
-            // console.error('Error during login:', error);
+            console.error('Error during login:', error);
             return next(CreateError(500, 'Something went wrong!'));
         }
     },
@@ -92,6 +91,7 @@ module.exports = {
             const tutors = await tutorModel.find({isDeleted:false,isBlocked:false});
             return next(CreateSuccess(200, 'Fetched tutors successfully', tutors, null));
         } catch (error) {
+            console.log(error);
             return next(CreateError(500,"Something went wrong while fetching users"));
         }
     },
@@ -114,7 +114,7 @@ module.exports = {
     
             return next(CreateSuccess(200, "Tutor added successfully", newTutor));
         } catch (error) {
-            // console.error('Error adding tutor:', error);
+            console.error('Error adding tutor:', error);
             return next(CreateError(500, "Something went wrong while adding the tutor"));
         }
     },
@@ -135,6 +135,8 @@ module.exports = {
             await tutor.save();
             return next(CreateSuccess(200, "Tutor blocked successfully"));
         } catch (error) {
+            console.log(error);
+            
             return next(CreateError(500, 'Error blocking tutor'));
         }
     },
@@ -155,6 +157,8 @@ module.exports = {
             await tutor.save();
             return next(CreateSuccess(200, "Tutor verified successfully"));
         } catch (error) {
+            console.log(error);
+            
             return next(CreateError(500, 'Error verifying tutor'));
         }
     },
@@ -172,6 +176,8 @@ module.exports = {
             await tutor.save();
             return next(CreateSuccess(200, "Tutor deleted successfully"));
         } catch (error) {
+            console.log(error);
+            
             return next(CreateError(500, 'Error deleting tutor'));
         }
     },
@@ -186,6 +192,8 @@ module.exports = {
             }
             return next(CreateSuccess(200, "Tutor data fetched successfully", tutor));
         } catch (error) {
+            console.log(error);
+            
             return next(CreateError(500, 'Error fetching tutor data'));
         }
     
@@ -207,6 +215,8 @@ module.exports = {
             await tutor.save();
             return next(CreateSuccess(200, "Tutor unblocked successfully"));
         } catch (error) {
+            console.log(error);
+            
             return next(CreateError(500, 'Error unblocking tutor'));
         }
     },
@@ -220,31 +230,27 @@ module.exports = {
             if (!tutor) {
                 return next(CreateError(404, "Tutor not found"));
             }
-            console.log("========ssd=");
             if (req.file) {
                 const image = req.file.path;
                 const result = await cloudinary.uploader.upload(image);
                 tutor.photoUrl = result.secure_url;
               }
-              console.log("=====dsds====");
     
             tutor.username = tutorName;
             tutor.education = education;
             tutor.phone = phone;
             tutor.email = email;
-            console.log("=====dsds[[[]]]====");
             if (password[0] !== "*") {
                 const salt = await bcrypt.genSalt(10);
                 const hashedPassword = await bcrypt.hash(password, salt);
                 tutor.password = hashedPassword;
             }
-            console.log("=====dsds[[]]====");
     
             await tutor.save();
     
             return next(CreateSuccess(200, "Tutor updated successfully"));
         } catch (error) {
-            // console.error("Error updating tutor:", error);
+            console.error("Error updating tutor:", error);
             return next(CreateError(500, "Error updating tutor"));
         }
     },
@@ -259,11 +265,81 @@ module.exports = {
                 .populate('tutor', 'username')  // Populate tutor details
                 .populate('course', 'courseName');  // Populate course details
 
-            return next(CreateSuccess(200, "Fetched today\'s classes successfully",students));
+            return next(CreateSuccess(200, "Fetched today's classes successfully",students));
             
         } catch (error) {
-            // console.error('Error fetching today\'s classes:', error);
-            return next(CreateError(500, "Error fetching today\'s classes"));
+            console.error("Error fetching today's classes:", error);
+            return next(CreateError(500, "Error fetching today's classes"));
+        }
+    },
+    getTutorStudentWithLastMessage:async(req,res,next)=>{
+        try {
+            const token = req.headers.authorization;
+            const jwtPayload = commonMethods.parseJwt(token);
+            const tutorId = jwtPayload.id;
+    
+            // Fetch all students data from the database
+            const students = await studentModel.find({ tutor: { $in: tutorId } }).select('username photoUrl');
+            console.log(students);
+            
+            const tutorWithLastMessage = await Promise.all(
+                students.map(async (student) => {
+                  const lastMessage = await chatModel
+                    .findOne({ userId: student._id, tutorId: tutorId })
+                    .sort({ createdAt: -1 })
+                    .select('message senderType createdAt');
+          
+                  return {
+                    userId: student._id,
+                    username: student.username,
+                    photoUrl: student.photoUrl,
+                    lastMessage: lastMessage ? lastMessage.message : "No messages",
+                    lastMessageTime: lastMessage ? lastMessage.createdAt : null,
+                  };
+                })
+              );
+            return next(CreateSuccess(200, "Fetched today's classes successfully",tutorWithLastMessage));
+            
+        } catch (error) {
+            console.error("Error fetching today's classes:", error);
+            return next(CreateError(500, "Error fetching today's classes"));
+        }
+    },
+    getTutorStudentWithMessage:async(req,res,next)=>{
+        try {
+            console.log("==========");
+            
+            const token = req.headers.authorization;
+            const jwtPayload = commonMethods.parseJwt(token);
+            const tutorId = jwtPayload.id;
+    
+            // Fetch all students data from the database
+            const students = await studentModel.find({ _id: { $in: tutorId } }).select('username photoUrl');
+            const tutorWithLastMessage = await Promise.all(
+                students.map(async (student) => {
+                  const lastMessage = await chatModel
+                    .findOne({ userId: student._id, tutorId: tutorId })
+                    .sort({ createdAt: -1 })
+                    .select('message senderType createdAt');
+          
+                  return {
+                    tutorId: student._id,
+                    username: student.username,
+                    photoUrl: student.photoUrl,
+                    lastMessage: lastMessage ? lastMessage.message : "No messages",
+                    lastMessageTime: lastMessage ? lastMessage.createdAt : null,
+                  };
+                })
+              );
+
+              console.log("tutorWithLastMessage",tutorWithLastMessage);
+              
+          
+            return next(CreateSuccess(200, "Fetched today's classes successfully",tutorWithLastMessage));
+            
+        } catch (error) {
+            console.error("Error fetching today's classes:", error);
+            return next(CreateError(500, "Error fetching today's classes"));
         }
     },
     markCompleted:async(req,res,next)=>{
@@ -292,7 +368,7 @@ module.exports = {
             return next(CreateSuccess(200, "Marked as completed", newCompletedClass));
     
         } catch (error) {
-            // console.error('Error in mark complete:', error);
+            console.error('Error in mark complete:', error);
             return next(CreateError(500, "Error in mark complete"));
         }
     },
@@ -315,7 +391,7 @@ module.exports = {
             // Send the block status in the response
             res.status(200).json({ blocked: tutor.isBlocked });
         } catch (error) {
-            // console.error('Block status error:', error);
+            console.error('Block status error:', error);
             next(CreateError(500, 'Error retrieving block status'));
         }
     },
@@ -335,8 +411,8 @@ module.exports = {
         return next(CreateSuccess(200, "Fetched upcoming classes successfully", todayClasses));
             
         } catch (error) {
-            // console.error('Error fetching today\'s upcoming classes:', error);
-            return next(CreateError(500, "Error fetching today\'s upcoming classes"));
+            console.error('Error fetching today\'s upcoming classes:', error);
+            return next(CreateError(500, "Error fetching today's upcoming classes"));
         }
     },
     searchTutor:async(req,res,next)=>{
@@ -360,6 +436,7 @@ module.exports = {
             const tutor = await tutorModel.find({_id:tutorId });
             return next(CreateSuccess(200,"Tutor data fetched successfully",tutor));
         } catch (error) {
+            console.log(error);
             return next(CreateError(500, "Error fetching tutor data"));
         }
     },
@@ -385,5 +462,7 @@ module.exports = {
             console.log(error.message);
             return next(CreateError(500, "Something went wrong while fetching old chats."));
         }
-    }
+    },
+   
+    
 }

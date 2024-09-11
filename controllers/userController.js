@@ -595,27 +595,51 @@ module.exports = {
             return next(CreateError(500, "Something went wrong while fetching old chats."));
         }
     },
-    getStudentTutor:async(req,res,next)=>{
+    getStudentTutorsWithLastMessage: async (req, res, next) => {
         try {
-            const token = req.headers.authorization;
-            const jwtPayload = commonMethods.parseJwt(token);
-            const studentId = jwtPayload.id;
-            const student = await studentModel.find({ isAdmin: false,_id:studentId });
-            console.log(student);
-            
-            const tutorId = student[0].tutor;
-            console.log(tutorId);
-            
-            const tutor = await tutorModel.find({_id:tutorId});
-            console.log(tutor);
-            
-            return next(CreateSuccess(200, "Student tutors fetched successfully", tutor));
-
+          const token = req.headers.authorization;
+          const jwtPayload = commonMethods.parseJwt(token);
+          const studentId = jwtPayload.id;
+      
+          // Fetch student info
+          const student = await studentModel.findOne({ isAdmin: false, _id: studentId }).populate('tutor');
+          if (!student || !student.tutor) {
+            return next(CreateError(404, "Student or tutor not found"));
+          }
+      
+          const tutorId = student.tutor._id;
+      
+          // Fetch tutor details
+          const tutors = await tutorModel.find({ _id: { $in: tutorId } }).select('username photoUrl');
+          if (!tutors.length) {
+            return next(CreateError(404, "No tutors found for the student"));
+          }
+      
+          // Fetch last messages between the student and their tutors
+          const tutorWithLastMessage = await Promise.all(
+            tutors.map(async (tutor) => {
+              const lastMessage = await chatModel
+                .findOne({ userId: studentId, tutorId: tutor._id })
+                .sort({ createdAt: -1 })
+                .select('message senderType createdAt');
+      
+              return {
+                tutorId: tutor._id,
+                username: tutor.username,
+                photoUrl: tutor.photoUrl,
+                lastMessage: lastMessage ? lastMessage.message : "No messages",
+                lastMessageTime: lastMessage ? lastMessage.createdAt : null,
+              };
+            })
+          );
+      
+          // Return response with tutors and last messages
+          return next(CreateSuccess(200, "Student tutors fetched successfully", tutorWithLastMessage));
         } catch (error) {
-            console.log(error.message);
-            return next(CreateError(500, "Something went wrong while fetching students tutors."));
+          console.log(error.message);
+          return next(CreateError(500, "Something went wrong while fetching student's tutors."));
         }
-    }
+      }
     
 
 }

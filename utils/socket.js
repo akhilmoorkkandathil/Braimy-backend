@@ -2,7 +2,6 @@ const { Server } = require("socket.io");
 const chatController = require("../controllers/chatController");
 const Chat = require("../models/chatModel");
 
-const onlineUsers = new Map();
 
 const initializeSocket = (server) => {
   const io = new Server(server, {
@@ -14,20 +13,14 @@ const initializeSocket = (server) => {
   });
 
   io.on("connection", (socket) => {
-    console.log("Socket.io user connectedm - util socket.js");
-    socket.emit("Server sended to the client without any request")
-
     socket.on("joinChat", ({ userId, userType }) => {
       if (userId) {
         socket.join(userId);
         console.log(`${userType} joined chat with ID: ${userId}`);
-        onlineUsers.set(userId, socket.id);
-        io.emit("onlineUsers", Array.from(onlineUsers.keys()));
       }
     });
 
     socket.on("sendMessage", async ({ userId,tutorId,senderType, message }) => {
-      console.log(userId,tutorId);
       const chatMessage = new Chat({
         userId,
         tutorId,
@@ -39,7 +32,7 @@ const initializeSocket = (server) => {
       if (senderType === "Tutor") {
         console.log("tutor sends message to user: ", userId);
         io.to(userId).emit("messageReceived", {
-          userId: chatMessage.userId,
+          tutorId: chatMessage.tutorId,
           senderType: chatMessage.senderType,
           message: chatMessage.message,
           createdAt: chatMessage.createdAt,
@@ -55,32 +48,28 @@ const initializeSocket = (server) => {
       io.emit("lastMessage", { userId, tutorId, message, createdAt: chatMessage.createdAt });
     });
 
-    socket.on("joinVideoCall", ({ userId, userType, roomId }) => {
-      socket.join(roomId);
-      console.log(`User ${userId} joined video call room ${roomId}`);
-      socket.to(roomId).emit("userJoined", { userId, userType });
-    });
+    console.log('A user connected');
 
-    socket.on("sendVideoMessage", (payload) => {
-      console.log("hello inside sendVideoMessage: ", payload);
-      const { roomId, ...data } = payload;
-      console.log(`check data:`, data);
+  socket.on('offer', (offer) => {
+    socket.broadcast.emit('offer', offer);
+  });
 
-      console.log("inside sendVideoMessage Socket connection", roomId);
-      socket.to(roomId).emit("videoMessage", data);
-    });
+  socket.on('answer', (answer) => {
+    socket.broadcast.emit('answer', answer);
+  });
 
-    socket.on("disconnect", () => {
-      console.log("user disconnected");
-      onlineUsers.forEach((value, key) => {
-        if (value === socket.id) {
-          onlineUsers.delete(key);
-        }
-      });
-      io.emit("onlineUsers", Array.from(onlineUsers.keys()));
+  socket.on('ice-candidate', (candidate) => {
+    socket.broadcast.emit('ice-candidate', candidate);
+  });
 
-      console.log("Socket.io user disconnected");
-    });
+  socket.on('end-call', () => {
+    socket.broadcast.emit('end-call');
+  });
+
+  socket.on('disconnect', () => {
+    console.log('A user disconnected');
+    socket.broadcast.emit('end-call');
+  });
 
     chatController.handleMessage(socket);
   });

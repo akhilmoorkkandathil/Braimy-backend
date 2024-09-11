@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { CreateError } = require('./error');
 
 
 
@@ -14,7 +15,7 @@ module.exports = {
      parseJwt:(token)=> {
         try {
             if (!token) {
-                return next(CreateError(500, "Token not found"));
+                return CreateError(500, "Token not found");
             }
             return JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
         } catch (e) {

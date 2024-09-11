@@ -29,6 +29,9 @@ userRouter.get('/getStudentData',userController.getStudentData);
 userRouter.post('/payment',userController.payment);
 userRouter.post('/payment_success',userController.paymentSucess);
 userRouter.get('/get_old_chats/:tutorId',userController.getOldChats);
-userRouter.get('/getStudentTutor',userController.getStudentTutor);
+userRouter.get('/getStudentTutorsWithLastMessage',userController.getStudentTutorsWithLastMessage);
 
 module.exports = userRouter;
+
+///For tommorrow
+// complete the student fetch for tutores and updae the sideba
