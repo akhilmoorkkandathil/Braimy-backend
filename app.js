@@ -89,12 +89,12 @@ function connectMongoDB(){
 }
 
 
-app.use("/images",express.static(path.join('backend/images')))
+app.use("/api/images",express.static(path.join('backend/images')))
 
-app.use('/user', userRouter);
-app.use('/admin',adminRouter);
-app.use('/coordinator',coordinatorRouter);
-app.use('/tutor',tutorRouter)
+app.use('/api/user', userRouter);
+app.use('/api/admin',adminRouter);
+app.use('/api/coordinator',coordinatorRouter);
+app.use('/api/tutor',tutorRouter)
 
 
 const server = http.createServer(app);
@@ -116,7 +116,7 @@ app.use((responseObj,req,res,next)=>{
     next()
 });
 
-server.listen(8000, ()=>{
+server.listen(8000,'0.0.0.0',()=>{
     connectMongoDB();
 });
 
