@@ -20,7 +20,7 @@ jobs:
           echo "EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}" >> .env
           echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
           echo "JWT_EXPIRES_IN=30" >> .env
-          echo "CLOUDNAME=${{ secrets.CLOUDNAME }}" >> .env
+          echo "BASE_URL_CLIENT=http://edusolvelearn.site" >> .env
           echo "CLOUDAPIKEY=${{ secrets.CLOUDAPIKEY }}" >> .env
           echo "CLOUDINARYSECRET=${{ secrets.CLOUDINARYSECRET }}" >> .env
           echo "PUBLIC_KEY=${{ secrets.PUBLIC_KEY }}" >> .env

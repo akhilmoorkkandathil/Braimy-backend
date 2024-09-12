@@ -43,16 +43,10 @@ app.use(express.static('public'));
 
 const allowedOrigins = [process.env.BASE_URL_CLIENT];
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true
-}));
-
+    origin: allowedOrigins, // Replace with your frontend domain
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true
+  }));
 // Initialize and use the session middleware
 app.use(session({
     secret: process.env.SECRET_KEY, // Replace with a secret key for session encryption
