@@ -53,9 +53,6 @@ app.use(cors({
   credentials: true
 }));
 
-
-
-
 // Initialize and use the session middleware
 app.use(session({
     secret: process.env.SECRET_KEY, // Replace with a secret key for session encryption
