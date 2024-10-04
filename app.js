@@ -12,8 +12,12 @@ const userRouter = require('./routes/userRoutes');
 const tutorRouter = require('./routes/tutorRoutes');
 const coordinatorRouter = require('./routes/coordinatorRoutes');
 const adminRouter = require('./routes/adminRoutes');
-const {CreateError} = require('./utils/socket')
-const initializeSocket = require('./utils/socket')
+const {CreateError} = require('./utils/error')
+const initializeSocket = require('./utils/socket');
+
+
+require('./utils/croneJob')
+//require('./utils/pushNotification')
 
 const app = express();
 dotenv.config();
@@ -25,7 +29,7 @@ const dns = require('dns');
 function checkInternet(req, res, next) {
     dns.lookup('google.com', (err) => {
         if (err && err.code === "ENOTFOUND") {
-            console.log("Entered internet checking - No internet");
+             //console.log("Entered internet checking - No internet");
             return next(CreateError(503, "No internet connection. Please try again later."));
         } else {
             next();
@@ -44,7 +48,7 @@ app.use(express.static('public'));
 const allowedOrigins = [process.env.BASE_URL_CLIENT];
 app.use(cors({
     origin: allowedOrigins, // Replace with your frontend domain
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE','PATCH'],
     credentials: true
   }));
 // Initialize and use the session middleware
@@ -72,11 +76,11 @@ const mongoUri = `mongodb+srv://akhildasxyz:${process.env.MONGO_PASSWORD}@akhil1
 function connectMongoDB(){
     mongoose.connect(mongoUri)
 .then(()=>{
-     console.log("Connected to Database!");
+      //console.log("Connected to Database!");
 })
 .catch(()=>{
     app.use((req, res, next) => {
-        return next(createError(402, "Service Unavailable: Please check your internet connection or try again later."));
+        return next(CreateError(402, "Service Unavailable: Please check your internet connection or try again later."));
     });
 })
 
@@ -110,7 +114,8 @@ app.use((responseObj,req,res,next)=>{
     next()
 });
 
-server.listen(8000,'0.0.0.0',()=>{
+server.listen(8000,()=>{
     connectMongoDB();
 });
 
+//,'0.0.0.0'

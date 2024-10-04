@@ -16,7 +16,7 @@ const initializeSocket = (server) => {
     socket.on("joinChat", ({ userId, userType }) => {
       if (userId) {
         socket.join(userId);
-        console.log(`${userType} joined chat with ID: ${userId}`);
+         //console.log(`${userType} joined chat with ID: ${userId}`);
       }
     });
 
@@ -30,7 +30,7 @@ const initializeSocket = (server) => {
       await chatMessage.save();
 
       if (senderType === "Tutor") {
-        console.log("tutor sends message to user: ", userId);
+         //console.log("tutor sends message to user: ", userId);
         io.to(userId).emit("messageReceived", {
           tutorId: chatMessage.tutorId,
           senderType: chatMessage.senderType,
@@ -48,7 +48,9 @@ const initializeSocket = (server) => {
       io.emit("lastMessage", { userId, tutorId, message, createdAt: chatMessage.createdAt });
     });
 
-    console.log('A user connected');
+     //console.log('A user connected');
+
+  
 
   socket.on('offer', (offer) => {
     socket.broadcast.emit('offer', offer);
@@ -67,7 +69,7 @@ const initializeSocket = (server) => {
   });
 
   socket.on('disconnect', () => {
-    console.log('A user disconnected');
+     //console.log('A user disconnected');
     socket.broadcast.emit('end-call');
   });
 

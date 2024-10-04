@@ -2,30 +2,40 @@ const express = require('express');
 const adminController = require('../controllers/adminController')
 const adminRouter = express.Router();
 
-const upload = require('../utils/multur')
+const upload = require('../utils/multur');
+const authenticateToken = require('../middlewares/authJWT');
+
 
 
 adminRouter.post('/login',adminController.adminLogin );
 
-adminRouter.post('/addCourse', upload.single('image'),adminController.addCourse);
+adminRouter.post('/addCourse', authenticateToken,upload.single('image'),adminController.addCourse);
+
+//The router used both in student fetch course and coordinator to fetch course
+//This router is used in both landing page course fetch and userisde course fetch
 adminRouter.get('/getCourses',adminController.getCourses);
-adminRouter.post('/updateCourse/:id', upload.single('image'),adminController.updateCourse);
-adminRouter.get('/getCourse/:id',adminController.getCourse);
-adminRouter.delete('/deleteCourse/:id',adminController.deleteCourse);
+adminRouter.post('/updateCourse/:id', authenticateToken,upload.single('image'),adminController.updateCourse);
+adminRouter.get('/getCourse/:id',authenticateToken,adminController.getCourse);
+adminRouter.delete('/deleteCourse/:id',authenticateToken,adminController.deleteCourse);
 
-adminRouter.post('/addPayment',adminController.addPayment);
-adminRouter.get('/getPayments',adminController.getPayments);
-adminRouter.post('/updatePayment/:id',adminController.updatePayment);
-adminRouter.get('/getPayment/:id',adminController.getPayment);
-adminRouter.post('/deletePayment/:id',adminController.deletePayment);
+adminRouter.post('/addPayment',authenticateToken,adminController.addPayment);
+adminRouter.get('/getPayments',authenticateToken,adminController.getPayments);
+adminRouter.post('/updatePayment/:id',authenticateToken,adminController.updatePayment);
+adminRouter.get('/getPayment/:id',authenticateToken,adminController.getPayment);
+adminRouter.post('/deletePayment',authenticateToken,adminController.deletePayment);
 
-adminRouter.put('/addExpense',adminController.addExpense);
-adminRouter.get('/getExpenses',adminController.getExpenses);
-adminRouter.put('/updateExpense/:id',adminController.updateExpense);
-adminRouter.get('/getExpense/:id',adminController.getExpense);
-adminRouter.post('/deleteExpense/:id',adminController.deleteExpense);
+adminRouter.put('/addExpense',authenticateToken,adminController.addExpense);
+adminRouter.get('/getExpenses',authenticateToken,adminController.getExpenses);
+adminRouter.put('/updateExpense/:id',authenticateToken,adminController.updateExpense);
+adminRouter.get('/getExpense/:id',authenticateToken,adminController.getExpense);
+adminRouter.post('/deleteExpense/:id',authenticateToken,adminController.deleteExpense);
 
-adminRouter.get('/dashboardData',adminController.dashboardData);
+adminRouter.get('/dashboardData',authenticateToken,adminController.dashboardData);
+
+adminRouter.post('/addFaq',authenticateToken,adminController.addFaq);
+adminRouter.get('/getFaqs',adminController.getFaqs);
+adminRouter.get('/deleteFaq/:faqId',authenticateToken,adminController.deleteFaq);
+adminRouter.post('/updateFaq/:faqId',authenticateToken,adminController.updateFaq)
 
 //adminRouter.get('/get_chat_user_list',adminController.getChatUsers);
 //adminRouter.get('/get_old_chats',adminController.getOldChats);

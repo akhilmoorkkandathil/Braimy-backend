@@ -12,7 +12,7 @@ module.exports.sendVerifyMail = async (name,email)=>{
     try
     {    
         const otp = generateOTP()+'';
-        // console.log('lets check otp type',  typeof otp);
+        //  //console.log('lets check otp type',  typeof otp);
         let message = `<p>Dear ${name},</p>
         <p>${otp} is your one time password (OTP). Please do not share the OTP with others.</p>
         <p>Regards,</p>
@@ -40,18 +40,18 @@ module.exports.sendVerifyMail = async (name,email)=>{
         transporter.sendMail(mailOptions,(error,info)=>{
             if(error)
             {
-                // console.log(error);
+                //  //console.log(error);
             }
             else
             {
-                // console.log("Email has been sent.",info.response);
+                //  //console.log("Email has been sent.",info.response);
             }
         })
-        // console.log(`check otp before return sendmail ${otp}`);
+        //  //console.log(`check otp before return sendmail ${otp}`);
         return otp;
     }
     catch(err)
     {
-        // console.log(err.message);
+        //  //console.log(err.message);
     }
 };

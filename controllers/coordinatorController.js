@@ -5,10 +5,13 @@ const {CreateSuccess} = require("../utils/success");
 const {CreateError} = require('../utils/error');
 const bcrypt = require('bcrypt');
 const moment = require('moment');
-const CompletedClass = require('../models/completedClassModel');
 const dotenv = require('dotenv');
 const webpush = require('web-push');
 const commonMethods = require('../utils/commonMethods');
+const UserCourseBucket = require('../models/userCourseBucketModel');
+const cloudinary = require('../utils/cloudinary');
+const CompletedClassModel = require('../models/atttendanceModel');
+
 
 dotenv.config();
 
@@ -27,7 +30,7 @@ module.exports = {
             }
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(req.body.password, salt);
-            // console.log(req.body);
+            //  //console.log(req.body);
             const newCoordinator = new coordinatorModel({
                 username:req.body.fullName,
                 email: req.body.email,
@@ -39,28 +42,19 @@ module.exports = {
             return next(CreateSuccess(200, 'Regsitration Successful.'));
             
         } catch (error) {
-            // console.log("Register error",  error);
+             //console.log("Register error",  error);
+            return next(CreateError(500, "Something went wrong!"));
         }
     },
     coordinatorLogin: async(req,res,next)=>{
+        console.log("==========");
         try {
             const { email, password } = req.body;
-            if (!email || !password) {
-                return next(CreateError(400, 'Email and password are required'));
-            }
     
-            const coordinator = await coordinatorModel.findOne({ email });
+            const coordinator = await coordinatorModel.findOne({ email,isDeleted:false });
             req.session.coordinatorId = coordinator._id;
             if (!coordinator) {
                 return next(CreateError(404, 'coordinator not found'));
-            }
-    
-            if (coordinator.isDeleted) {
-                return next(CreateError(406, 'coordinator is deleted'));
-            }
-
-            if(!coordinator.password){
-                return next(CreateError(400, 'Reset Password'));
             }
             const isPasswordCorrect = await bcrypt.compare(password, coordinator.password);
             if (!isPasswordCorrect) {
@@ -82,7 +76,7 @@ module.exports = {
             return next(CreateSuccess(200,"Login Success",coordinatorData,token));
     
         } catch (error) {
-            // console.error('Error during login:', error); // Log the error for debugging
+            console.error('Error during login:', error); // Log the error for debugging
             return next(CreateError(500, 'Something went wrong!'));
         }
     },
@@ -90,23 +84,15 @@ module.exports = {
         try {
             // Fetch all students data from the database
             const Coordinators = await coordinatorModel.find({isDeleted:false});
-            const formattedCoordinators = Coordinators.map((coordinator, index) => ({
-                _id:coordinator._id,
-                position: index + 1,
-                name: coordinator.username,
-                email: coordinator.email,
-                phone: coordinator.phone,
-                isVerified:coordinator.isVerified,
-                isBlocked:coordinator.isBlocked,
-              }));
-            return next(CreateSuccess(200, 'Fetched Coordinators successfully', formattedCoordinators, null));
+            
+            return next(CreateSuccess(200, 'Fetched Coordinators successfully', Coordinators, null));
         } catch (error) {
             return next(CreateError(500,"Something went wrong while fetching users"));
         }
     },
     addCoordinator:async(req,res,next)=>{
         try {
-            // console.log(req.body);
+            //  //console.log(req.body);
             const { coordinatorName, email, phone, description, password } = req.body;
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(password, salt);
@@ -123,7 +109,7 @@ module.exports = {
     
             return next(CreateSuccess(200, "Coordinator added successfully", newCoordinator));
         } catch (error) {
-            // console.error('Error adding course:', error);
+             console.error('Error adding course:', error);
             return next(CreateError(500, "Something went wrong while adding the course"));
         }
     },
@@ -253,7 +239,7 @@ module.exports = {
         }
     },
     manageStudent:async(req,res,next)=>{
-        // console.log("hello",req.body);
+        //  //console.log("hello",req.body);
         try {
             const {
                 studentName,
@@ -292,7 +278,7 @@ module.exports = {
     },
     todaysClasses:async(req,res,next)=>{
         try {
-            console.log("==========");
+             //console.log("==========");
             // Get the current day of the week (e.g., 'Mon', 'Tue', 'Wed', etc.)
             const today = moment().format('ddd');  // Formats as 'Mon', 'Tue', etc.
     
@@ -303,7 +289,7 @@ module.exports = {
     
             // Filter students to include only those whose `selectedDays` include today's day
             const filteredStudents = students.filter(student => student.selectedDays.includes(today));
-console.log("=======ewrwer");
+ //console.log("=======ewrwer");
             return next(CreateSuccess(200, "Fetched today\'s classes successfully",filteredStudents));
             
         } catch (error) {
@@ -311,96 +297,52 @@ console.log("=======ewrwer");
             return next(CreateError(500, "Error fetching today\'s classes"));
         }
     },
-    upcomingClasses:async(req,res,next)=>{
+    upcomingClasses: async (req, res, next) => {
         try {
-            const today = moment().format('ddd');
-        const students = await studentModel.find({ isAdmin: false })
-            .populate('tutor', 'username') 
-            .populate('course', 'courseName');
-        const todayClasses = students.filter(student => student.selectedDays.includes(today)).slice(0,4);
-        
-        // // console.log(todayClasses);
-        return next(CreateSuccess(200, "Fetched upcoming classes successfully", todayClasses));
-            
+            const token = req.headers.authorization; // Get the token from the request headers
+            const jwtPayload = commonMethods.parseJwt(token); // Assuming you have a method to parse the JWT
+            const coordinatorId = jwtPayload.id; // Extract the coordinator ID from the token payload
+    
+            // Fetch all user course buckets for students assigned to the coordinator
+            const userCourseBuckets = await UserCourseBucket.find({ coordinatorId: coordinatorId })
+                .populate('userId courseId assignedTutor'); // Populate necessary fields
+    
+            // Get today's day of the week
+            const today = moment().format('ddd'); // e.g., 'Mon', 'Tue', etc.
+    
+            // Filter upcoming classes based on selectedDays
+            const upcomingClasses = userCourseBuckets.filter(bucket => 
+                bucket.selectedDays.includes(today) // Check if today is in the selectedDays array
+            );
+    
+            // Return response with upcoming classes
+            return next(CreateSuccess(200, "Fetched upcoming classes successfully", upcomingClasses));
         } catch (error) {
-            // console.error('Error fetching today\'s upcoming classes:', error);
-            return next(CreateError(500, "Error fetching today\'s upcoming classes"));
+            console.error('Error fetching upcoming classes:', error);
+            return next(CreateError(500, "Error fetching upcoming classes"));
         }
     },
-    approveClass:async(req,res,next)=>{
+    approveClass: async (req, res, next) => {
         try {
-            const userId = req.params.id;
-            let student = await studentModel.findById({_id: userId});
+            const completedClassId = req.params.id; // Extract the completed class ID from the request parameters
     
-            if (!student) {
-                return next(CreateError(404, "Student not found"));
-            }
-            if (student.classStatus!=='Completed') {
-                return next(CreateError(404, "Class not completed"));
-            }
-            student.approvalStatus = 'Approved';
-
-            student.save();
-            const newCompletedClass = new CompletedClass({
-                studentId: student._id,
-                tutorId: student.tutor,
-                coordinatorId: student.coordinator,
-                courseId: student.course,
-                duration: student.classDuration,
-                classStatus: 'Completed',
-                approvalStatus: 'Approved'
-            });
-    
-            await newCompletedClass.save();
-    
-            return next(CreateSuccess(200, "Approved"));
-    
-        } catch (error) {
-            // console.error('Error in mark complete:', error);
-            return next(CreateError(500, "Error in mark complete"));
-        }
-    },
-    notificationSend:async(req,res,next)=>{
-        try {
-            const userId = req.params.id;
-            let student = await studentModel.findById({_id: userId});
-            if (!student) {
-                return next(CreateError(404, "Student not found"));
-            }
-            const publicKey = process.env.PUBLIC_KEY;
-            const privateKey = process.env.PRIVATE_KEY;
-            try {
-                webpush.setVapidDetails('mailto:akhildasxyz@gmail.com', publicKey, privateKey);
-            } catch (error) {
-                return next(CreateError(500, "Error setting VAPID details: " + error.message));
-            }
-            let  image = ('')
-            const payLoad = {
-                notification: {
-                    title: "Braimy", // Title of the notification
-                    body: "Class starts soon...", // Message to be displayed in the notification
-                    vibrate: [100, 50, 100], // Vibration pattern for the notification
-                    icon: "../assets/download.pn", // Path to the custom icon
-                    data: {
-                        additionalData: "Any additional data you want to send" // Optional field for additional data
-                    }
-                }
-            };
+            // Find the completed class by ID
+            const completedClass = await CompletedClassModel.findById(completedClassId);
             
-
-            webpush.sendNotification(student.subscription, JSON.stringify(payLoad))
-            .then(() => {
-                return next(CreateSuccess(200, "Notification sent"));
-            })
-            .catch(error => {
-                // console.log(error);
-                return next(CreateError(500, "Error sending notification: "));
-            });
-
-            
+            if (!completedClass) {
+                return next(CreateError(404, "Completed class not found"));
+            }
+    
+            // Update the status to 'approved'
+            completedClass.status = 'Approved';
+    
+            // Save the updated completed class entry to the database
+            await completedClass.save();
+    
+            return next(CreateSuccess(200, "Class approved successfully"));
         } catch (error) {
-            // console.log(error);
-            return next(CreateError(500, "Error in sending notification"));
+            console.error('Error approving class:', error);
+            return next(CreateError(500, "Error in approving class"));
         }
     },
     blockStatus:async(req,res,next)=>{
@@ -414,7 +356,7 @@ console.log("=======ewrwer");
             const coordinatorId = jwtPayload.id;
             // Fetch the coordinator from the database
             const coordinator = await coordinatorModel.findById(coordinatorId).exec();
-            // console.log(coordinator);
+            //  //console.log(coordinator);
             if (!coordinator) {
                 return res.status(404).json({ blocked: true }); 
             }
@@ -425,5 +367,255 @@ console.log("=======ewrwer");
             // console.error('Block status error:', error);
             next(CreateError(500, 'Error retrieving block status'));
         }
+    },
+    getUsersList: async (req, res, next) => {
+        try {
+            const token = req.headers.authorization;
+            const jwtPayload = commonMethods.parseJwt(token);
+            const coordinatorId = jwtPayload.id; // Assuming the coordinator ID is in the token
+    
+            // Fetch all users associated with the coordinator
+            const users = await studentModel.find({
+                coordinator: coordinatorId // Filter by coordinator ID
+            });
+    
+            if (!users.length) {
+                return next(CreateSuccess(200, "No users found assigned"));
+            }
+    
+            return next(CreateSuccess(200, "Fetched users successfully", users));
+        } catch (error) {
+            console.error('Error fetching users:', error);
+            return next(CreateError(500, "Error fetching users"));
+        }
+    },
+    fetchBucketCourses: async (req, res, next) => {
+      try {
+
+        const studentId = req.params.userId;
+          // Fetch the user's bucket entries
+          const bucketEntries = await UserCourseBucket.find({ userId: studentId })
+              .populate('courseId') // Populate the course details
+              .populate('assignedTutor')
+              .exec();
+  
+          // Check if there are any bucket entries
+          if (!bucketEntries.length) {
+              return next(CreateSuccess(200, "No courses found in the bucket"));
+          }
+
+          console.log(bucketEntries);
+  
+          // Send the bucket entries (with populated course data) to the frontend
+          return next(CreateSuccess(200, "Fetched bucket courses successfully", bucketEntries));
+      } catch (error) {
+          console.error("Error fetching bucket courses:", error);
+          return next(CreateError(500, "Error fetching bucket courses"));
+      }
+  },
+  addCourseToUserBucket: async (req, res, next) => {
+    try {
+        const token = req.headers.authorization;
+        const jwtPayload = commonMethods.parseJwt(token);
+        const coordinatorId = jwtPayload.id;
+        const studentId = req.params.studentId; // Get studentId from request parameters
+        const { tutor, course, selectedDays, preferredTime, duration } = req.body; // Extract data from request body
+
+        // Check if the course is already added to the student's bucket
+        const existingBucketEntry = await UserCourseBucket.findOne({
+            userId: studentId,
+            courseId: course
+        });
+
+        if (existingBucketEntry) {
+            return next(CreateError(403, "Course already added to the bucket")); // Conflict status
+        }
+
+        // Create a new bucket entry
+        const bucketData = new UserCourseBucket({
+            userId: studentId, // Set the userId to the student's ID
+            courseId: course, // Include courseId
+            assignedTutor:tutor,  // Include tutorId
+            selectedDays: selectedDays, // Include selectedDays
+            preferredTime: preferredTime, // Include preferredTime
+            classDuration: duration, // Include classDuration
+            coordinatorId:coordinatorId
+        });
+
+        // Save the new bucket entry to the database
+        await bucketData.save();
+
+        return next(CreateSuccess(201, "Course added to user's bucket successfully", bucketData));
+    } catch (error) {
+        console.error("Error adding course to user bucket:", error);
+        return next(CreateError(500, "Error adding course to user bucket"));
     }
+},
+updateCourseToUserBucket: async (req, res, next) => {
+    try {
+        const studentId = req.params.studentId; // Get studentId from request parameters
+        const { course, tutor, selectedDays, preferredTime, classDuration } = req.body; // Extract data from request body
+        // Find the existing bucket entry
+        const bucketEntry = await UserCourseBucket.findOne({
+            userId: studentId,
+            courseId: course
+        });
+
+
+        console.log(bucketEntry);
+
+        if (!bucketEntry) {
+            return next(CreateError(403, "Course not found in the bucket")); // Not found status
+        }
+
+        // Update the bucket entry with new data
+        bucketEntry.selectedDays = selectedDays || bucketEntry.selectedDays; // Update selectedDays if provided
+        bucketEntry.preferredTime = preferredTime || bucketEntry.preferredTime; // Update preferredTime if provided
+        bucketEntry.classDuration = classDuration || bucketEntry.classDuration; // Update classDuration if provided
+
+        // Update courseId and assignedTutor if provided
+        if (course) {
+            bucketEntry.courseId = course; // Update courseId
+        }
+        if (tutor) {
+            bucketEntry.assignedTutor = tutor; // Update assignedTutor
+        }
+
+        // Save the updated bucket entry to the database
+        await bucketEntry.save();
+
+        return next(CreateSuccess(200, "Course updated in user's bucket successfully", bucketEntry));
+    } catch (error) {
+        console.error("Error updating course in bucket:", error);
+        return next(CreateError(500, "Error updating course in user's bucket"));
+    }
+},
+removeFromBucket: async (req, res, next) => {
+    try {
+        const { studentId, courseId } = req.params;
+
+        // Find and remove the course from the user's bucket
+        const result = await UserCourseBucket.findOneAndDelete({
+            userId: studentId,
+            courseId: courseId
+        });
+
+        if (!result) {
+            return next(CreateError(403, "Course not found in the bucket"));
+        }
+
+        return next(CreateSuccess(200, "Course removed from user's bucket successfully"));
+    } catch (error) {
+        console.error("Error removing course from bucket:", error);
+        return next(CreateError(500, "Error removing course from user's bucket"));
+    }
+},
+getBucketCourse: async (req, res, next) => {
+    try {
+        const { studentId, courseId } = req.params;
+
+        // Find the course in the user's bucket
+        const bucketEntry = await UserCourseBucket.findOne({
+            userId: studentId,
+            courseId: courseId
+        })
+        
+        return next(CreateSuccess(200, "Fetched course from user's bucket successfully", bucketEntry));
+    } catch (error) {
+        console.error("Error fetching course from bucket:", error);
+        return next(CreateError(500, "Error fetching course from user's bucket"));
+    }
+},
+uploadCoordinatorProfilePhoto:async(req,res,next)=>{
+    try {
+
+        console.log("=============");
+        const token = req.headers.authorization;
+        const jwtPayload = commonMethods.parseJwt(token);
+        const coordinatorId = jwtPayload.id;
+
+        // Find the student by ID
+        let coordinator = await coordinatorModel.findById(coordinatorId);
+        if (!coordinator) {
+            return next(CreateError(404, "Coordinator not found"));
+        }
+
+        // Check if a file is uploaded
+        if (req.file) {
+            const image = req.file.path;
+            const result = await cloudinary.uploader.upload(image);
+            coordinator.photoUrl = result.secure_url; // Update the photoUrl in the student object
+        } else {
+            return next(CreateError(400, "No file uploaded"));
+        }
+
+        // Save the updated student document
+        await coordinator.save();
+
+        return next(CreateSuccess(200, "Profile photo updated successfully", coordinator));
+    } catch (error) {
+        console.error("Error updating profile photo:", error);
+        return next(CreateError(500, "Error updating profile photo"));
+    }
+},
+
+getCoordinatorData:async(req,res,next)=>{
+    try {
+        const token = req.headers.authorization;
+        const jwtPayload = commonMethods.parseJwt(token);
+        const coordinatorId = jwtPayload.id;
+        const coordinator = await coordinatorModel.find({ _id:coordinatorId });
+        return next(CreateSuccess(200,"User data fetched successfully",coordinator[0]));
+    } catch (error) {
+        return next(CreateError(500, "Error fetching user data"));
+    }
+},
+editCoordinatorProfileInfo:async(req,res,next)=>{
+    try {
+        const { username, email , phone, about } = req.body;
+
+        const token = req.headers.authorization;
+        const jwtPayload = commonMethods.parseJwt(token);
+        const coordinatorId = jwtPayload.id;
+        let coordinator = await coordinatorModel.findById(coordinatorId);
+    if (!coordinator) {
+        return next(CreateError(404, "Coordinator not found"));
+    }
+
+    // Update the student's profile data
+    coordinator.username = username || coordinator.username; // Update username if provided
+    coordinator.email = email || coordinator.email; // Update class if provided
+    coordinator.phone = phone || coordinator.phone; // Update phone if provided
+    coordinator.about = about || coordinator.about; // Update about if provided
+
+    // Save the updated coordinator document
+    await coordinator.save();
+
+    return next(CreateSuccess(200, "Coordinator profile updated successfully", coordinator));
+    } catch (error) {
+        console.error("Error updating coordinator profile:", error);
+    return next(CreateError(500, "Error updating Coordinator profile"));
+    }
+},
+getAllCompletedClasses: async (req, res, next) => {
+    try {
+        const token = req.headers.authorization;
+        const jwtPayload = commonMethods.parseJwt(token);
+        const coordinatorId = jwtPayload.id; // Assuming the tutor ID is in the token
+
+        // Fetch all user course buckets for the tutor
+        const completedClasses = await CompletedClassModel.find({
+            coordinatorId: coordinatorId // Filter by tutor ID
+        }).populate('studentId') // Optionally populate student details
+          .populate('courseId'); // Optionally populate course details
+        if (!completedClasses.length) {
+            return next(CreateSuccess(200, "No completed classes found for this coordinator"));
+        }
+
+        return next(CreateSuccess(200, "Fetched completed classes successfully", completedClasses));
+    } catch (error) {
+        console.error('Error fetching completed classes:', error);
+        return next(CreateError(500, "Error fetching completed classes"));
+    }
+},
 }

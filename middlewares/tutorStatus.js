@@ -1,18 +1,22 @@
-const studentModel = require('../models/userModel');
+const tutorModel = require('../models/tutorModel');
+const commonMethods = require('../utils/commonMethods');
 const { CreateError } = require('../utils/error');
 
-const checkUserStatus = async (req, res, next) => {
+const checkTutorStatus = async (req, res, next) => {
     try {
 
-        const email = req.body.email;
-      const user = await studentModel.find({email:email});
-      if (user.isBlocked) {
+      const token = req.headers.authorization;
+      const jwtPayload = commonMethods.parseJwt(token);
+      const tutorId = jwtPayload.id;
+      const tutor = await tutorModel.findOne({_id:tutorId});
+      if (tutor.isBlocked) {
         return next(CreateError(403,"User Blocked"));
       }
       next();
     } catch (error) {
-      res.status(500).json({ message: 'Internal server error' });
+      console.log(error);
+      return next(CreateError(500,"Error in tutor status check middleware"));
     }
 }
 
-module.exports = checkUserStatus
+module.exports = checkTutorStatus

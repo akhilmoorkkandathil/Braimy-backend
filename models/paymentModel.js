@@ -3,9 +3,12 @@ const Schema = mongoose.Schema;
 
 
 const PaymentSchema = mongoose.Schema({
+  orderId:{
+    type:String
+  },
   studentId: {
     type: Schema.Types.ObjectId,
-    ref: 'Student',
+    ref: 'User',
     required: true
   },
   planSelected: {
@@ -25,7 +28,10 @@ const PaymentSchema = mongoose.Schema({
   status: {
   type: String,
   enum: ['completed', 'cancelled'],
-  required: true
+  default:'cancelled'
+},
+timeRecharged:{
+  type:Number
 }
 });
 

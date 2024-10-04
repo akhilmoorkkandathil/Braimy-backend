@@ -35,52 +35,24 @@ const userSchema = new Schema({
         type: Boolean,
         default: false
     },
-    OTP: {
-        type: String,
-        default: null
-    },
-    tutor: {
-        type: Schema.Types.ObjectId,
-        ref: 'Tutor'
-    },
     coordinator: {
         type: Schema.Types.ObjectId,
-        ref: 'Coordinator' // Assuming your coordinator collection/model is named 'Coordinator'
-    },
-    course: {
-        type: Schema.Types.ObjectId,
-        ref: 'Course' // Assuming your course collection/model is named 'Course'
+        ref: 'Coordinator' 
     },
     isAdmin: {
         type: Boolean,
         default: false
     },
-    selectedDays: {
-        type: [String], // Array of strings to store selected days
-    },
-    preferredTime: {
-        type: String, // String to store preferred time
-    },
-    classDuration: {
-        type: String, // String to store preferred time
-    },
-    classStatus: {
-      type: String,
-      enum: ['Scheduled', 'Completed'],
-      default: 'Scheduled'
-    },
-    approvalStatus: {
-      type: String,
-      enum: ['Pending', 'Approved', 'Rejected'],
-      default: 'Pending'
-    },
     subscription: {
         type: Object,
         default: null
     },
-    rechrgedHourse:{
+    rechargedHours:{
         type:Number,
         default:0
+    },
+    about:{
+        type:String
     }
 });
 

@@ -35,6 +35,9 @@ const tutorSchema = mongoose.Schema({
         type: Boolean,
         default: false
     },
+    about:{
+        type:String
+    }
 });
 
 const Tutor= mongoose.model('Tutor',tutorSchema);

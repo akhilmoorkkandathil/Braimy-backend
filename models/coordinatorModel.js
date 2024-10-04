@@ -35,6 +35,9 @@ const CoordinatorSchema = mongoose.Schema({
     isAdmin:{
         type:Boolean,
         default:false
+    },
+    about:{
+        type:String
     }
 });
 
