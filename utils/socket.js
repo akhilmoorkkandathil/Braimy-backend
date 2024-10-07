@@ -20,32 +20,32 @@ const initializeSocket = (server) => {
       }
     });
 
-    socket.on("sendMessage", async ({ userId,tutorId,senderType, message }) => {
+    socket.on("sendMessage", async (message) => {
       const chatMessage = new Chat({
-        userId,
-        tutorId,
-        senderType,
-        message,
+        userId:message.userId,
+        tutorId:message.tutorId,
+        senderType:message.senderType,
+        message:message.message,
       });
       await chatMessage.save();
 
-      if (senderType === "Tutor") {
+      if (message.senderType === "Tutor") {
          //console.log("tutor sends message to user: ", userId);
-        io.to(userId).emit("messageReceived", {
+        io.to(message.userId).emit("messageReceived", {
           tutorId: chatMessage.tutorId,
           senderType: chatMessage.senderType,
           message: chatMessage.message,
           createdAt: chatMessage.createdAt,
         });
       } else {
-        io.to(tutorId).emit("messageReceived", {
+        io.to(message.tutorId).emit("messageReceived", {
           userId: chatMessage.userId,
           senderType: chatMessage.senderType,
           message: chatMessage.message,
           createdAt: chatMessage.createdAt,
         });
       }
-      io.emit("lastMessage", { userId, tutorId, message, createdAt: chatMessage.createdAt });
+      //io.emit("lastMessage", { userId, tutorId, message, createdAt: chatMessage.createdAt });
     });
 
      //console.log('A user connected');

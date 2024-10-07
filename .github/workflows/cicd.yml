@@ -43,4 +43,6 @@ jobs:
       - name: Delete old container
         run: sudo docker rm -f nodejs-app-container  
       - name: Run docker container
-        run: sudo docker run -d -p 8000:8000 --name nodejs-app-container akhilmoorkkandathil/braimy-backed  
+        run: sudo docker run -d -p 8000:8000 --name nodejs-app-container akhilmoorkkandathil/braimy-backed
+      - name: Remove all unused images  
+        run: sudo docker image prune -a
