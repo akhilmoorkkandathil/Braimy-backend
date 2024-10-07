@@ -335,9 +335,17 @@ module.exports = {
     
             // Update the status to 'approved'
             completedClass.status = 'Approved';
-    
+
+            const classDurationInHours = parseInt(completedClass.duration.replace('hr', ''));
+
             // Save the updated completed class entry to the database
             await completedClass.save();
+            // Find and update the user's rechargedHours by reducing the class duration
+            await studentModel.findByIdAndUpdate(
+                completedClass.studentId,
+                { $inc: { rechargedHours: -classDurationInHours } }, // Decrement rechargedHours
+                { new: true } // Return the updated user document
+            );
     
             return next(CreateSuccess(200, "Class approved successfully"));
         } catch (error) {

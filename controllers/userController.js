@@ -164,7 +164,7 @@ module.exports = {
           const { email, name, photoUrl } = req.body;
       console.log(req.body);
           // Check if user already exists and is verified
-          let user = await userModel.findOne({ email, isVerified: true });
+          let user = await userModel.findOne({ email, isVerified: true,isAdmin:false });
       
           // If user doesn't exist, create a new one
           if (!user) {
@@ -551,7 +551,8 @@ module.exports = {
             })
             .populate('courseId') // Populate course details if needed
             .populate('assignedTutor'); // Populate tutor details if needed
-    
+
+            console.log(todayClasses);
             if (!todayClasses.length) {
                 return next(CreateSuccess(200, "No classes found for today"));
             }

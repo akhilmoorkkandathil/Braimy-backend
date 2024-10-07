@@ -28,27 +28,29 @@ async function sendEmailsForClasses() {
         usersWithClasses.forEach(async (bucket) => {
             const { userId, courseId, preferredTime,assignedTutor, classDuration } = bucket;
         
-            const mailOptions = {
-                from: 'your-email@gmail.com',
-                to: userId.email,
-                subject: `Reminder: Your class is scheduled for today`,
-                text: `Dear ${userId.username},
-        
-        You have a ${courseId.courseName} class scheduled today at ${preferredTime} for a duration of ${classDuration}. 
-        Your class will be taken by ${assignedTutor.username}.
-        
-        Please be ready!
-        
-        Best regards,
-        Braimy.`,
-            };
-        
-            try {
-                // Send the email
-                await transporter.sendMail(mailOptions);
-                console.log(`Email sent to ${userId.email}`);
-            } catch (error) {
-                console.error(`Failed to send email to ${userId.email}:`, error);
+            if(assignedTutor){
+                const mailOptions = {
+                    from: 'your-email@gmail.com',
+                    to: userId.email,
+                    subject: `Reminder: Your class is scheduled for today`,
+                    text: `Dear ${userId.username},
+            
+            You have a ${courseId.courseName} class scheduled today at ${preferredTime} for a duration of ${classDuration}. 
+            Your class will be taken by ${assignedTutor.username}.
+            
+            Please be ready!
+            
+            Best regards,
+            Braimy.`,
+                };
+            
+                try {
+                    // Send the email
+                    await transporter.sendMail(mailOptions);
+                    console.log(`Email sent to ${userId.email}`);
+                } catch (error) {
+                    console.error(`Failed to send email to ${userId.email}:`, error);
+                }
             }
         });
     } catch (error) {
