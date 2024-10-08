@@ -1,9 +1,7 @@
-const jwt = require('jsonwebtoken');
-const { CreateError } = require('./error');
+import jwt from 'jsonwebtoken';
+import { CreateError } from './error.js';
 
-
-
-module.exports = {
+const commonMethods = {
     createToken:(id,isUser)=>{
        const token = jwt.sign(
             { id: id, isUser: isUser },
@@ -23,3 +21,5 @@ module.exports = {
         }
 }
 }
+
+export default commonMethods;

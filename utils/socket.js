@@ -1,9 +1,10 @@
-const { Server } = require("socket.io");
-const chatController = require("../controllers/chatController");
-const Chat = require("../models/chatModel");
+import { Server } from "socket.io";
+import chatController from "../controllers/chatController.js";
+import Chat from "../models/chatModel.js";
 
 
-const initializeSocket = (server) => {
+
+export const initializeSocket = (server) => {
   const io = new Server(server, {
     cors: {
       origin: process.env.BASE_URL_CLIENT,
@@ -16,8 +17,7 @@ const initializeSocket = (server) => {
     socket.on("joinChat", ({ userId, userType }) => {
       if (userId) {
         socket.join(userId);
-         //console.log(`${userType} joined chat with ID: ${userId}`);
-      }
+       }
     });
 
     socket.on("sendMessage", async (message) => {
@@ -30,8 +30,7 @@ const initializeSocket = (server) => {
       await chatMessage.save();
 
       if (message.senderType === "Tutor") {
-         //console.log("tutor sends message to user: ", userId);
-        io.to(message.userId).emit("messageReceived", {
+         io.to(message.userId).emit("messageReceived", {
           tutorId: chatMessage.tutorId,
           senderType: chatMessage.senderType,
           message: chatMessage.message,
@@ -45,12 +44,8 @@ const initializeSocket = (server) => {
           createdAt: chatMessage.createdAt,
         });
       }
-      //io.emit("lastMessage", { userId, tutorId, message, createdAt: chatMessage.createdAt });
-    });
-
-     //console.log('A user connected');
-
-  
+     });
+   
 
   socket.on('offer', (offer) => {
     socket.broadcast.emit('offer', offer);
@@ -61,6 +56,7 @@ const initializeSocket = (server) => {
   });
 
   socket.on('ice-candidate', (candidate) => {
+    console.log(candidate);
     socket.broadcast.emit('ice-candidate', candidate);
   });
 
@@ -69,8 +65,7 @@ const initializeSocket = (server) => {
   });
 
   socket.on('disconnect', () => {
-     //console.log('A user disconnected');
-    socket.broadcast.emit('end-call');
+     socket.broadcast.emit('end-call');
   });
 
     chatController.handleMessage(socket);
@@ -78,4 +73,3 @@ const initializeSocket = (server) => {
   return io;
 };
 
-module.exports = initializeSocket;

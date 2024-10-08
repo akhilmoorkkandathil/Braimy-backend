@@ -1,21 +1,22 @@
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
+import mongoose from "mongoose";
+const { Schema } = mongoose;
+
 
 const FaqSchema = new Schema({
     question: {
         type: String,
-        required: true, // Make the question field required
+        required: true, //
     },
     answer: {
         type: String,
-        required: true, // Make the answer field required
+        required: true, 
     },
     createdAt: {
         type: Date,
-        default: Date.now, // Automatically set the creation date
+        default: Date.now, 
     },
 });
 
-const Faq = mongoose.model('Faq', FaqSchema);
+const FaqModel = mongoose.model('Faq', FaqSchema);
 
-module.exports = Faq;
+export default FaqModel;

@@ -1,20 +1,17 @@
-const adminModel = require("../models/userModel");
-const { CreateSuccess } = require("../utils/success");
-const { CreateError } = require("../utils/error");
-const bcrypt = require("bcrypt");
-const courseModel = require("../models/courseModel");
-const paymentModel = require("../models/paymentModel");
-const expenceModel = require("../models/expenseSchema");
-const studentModel = require("../models/userModel");
-const tutorModel = require("../models/tutorModel");
-const commonMethods = require("../utils/commonMethods");
-const moment = require('moment'); // Import moment for date formatting
-const FaqModel = require('../models/faqModel')
+import { CreateSuccess } from "../utils/success.js";
+import { CreateError } from "../utils/error.js";
+import bcrypt from "bcrypt";
+import courseModel from "../models/courseModel.js";
+import paymentModel from "../models/paymentModel.js";
+import expenceModel from "../models/expenseSchema.js";
+import studentModel from "../models/userModel.js";
+import tutorModel from "../models/tutorModel.js";
+import commonMethods from "../utils/commonMethods.js";
+import moment from "moment";
+import FaqModel from "../models/faqModel.js";
+import cloudinary from "../utils/cloudinary.js";
 
-
-const cloudinary = require("../utils/cloudinary");
-
-module.exports = {
+export const adminController = {
   adminLogin: async (req, res, next) => {
     try {
       const { email, password } = req.body;
@@ -22,7 +19,7 @@ module.exports = {
         return next(CreateError(400, "Email and password are required"));
       }
 
-      const admin = await adminModel.findOne({ email, isAdmin: true });
+      const admin = await studentModel.findOne({ email, isAdmin: true });
       if (!admin) {
         return next(CreateError(404, "admin not found"));
       }
@@ -47,7 +44,6 @@ module.exports = {
 
   addCourse: async (req, res, next) => {
     try {
-       //console.log(req.body);
       const { courseName, class: courseClass, subject, description, topic } = req.body;
       const image = req.file.path;
       const result = await cloudinary.uploader.upload(image);
@@ -78,36 +74,30 @@ module.exports = {
   },
   addPayment: async (req, res, next) => {
     try {
-        console.log(req.body);
-        const { student, amountPaid, planSelected } = req.body;
+      console.log(req.body);
+      const { student, amountPaid, planSelected } = req.body;
+      const timeRecharged = Math.ceil(amountPaid / 150);
+      const newPayment = new paymentModel({
+        studentId: student,
+        planSelected,
+        amountPaid,
+        isDeleted: false,
+        date: new Date(),
+        status: "completed",
+        timeRecharged,
+      });
+      await newPayment.save();
+      const user = await studentModel.findById(student);
 
-        // Calculate the recharged time by dividing amountPaid by 150
-        const timeRecharged = Math.ceil(amountPaid / 150); // Use Math.floor to get whole hours
+      user.rechargedHours = (user.rechargedHours || 0) + timeRecharged;
+      await user.save();
 
-        // Create a new payment document
-        const newPayment = new paymentModel({
-            studentId: student, // Assuming student is the ID of the student
-            planSelected,
-            amountPaid,
-            isDeleted: false,
-            date: new Date(), // Set the current date
-            status: 'completed', // Set the initial status
-            timeRecharged // Set the calculated recharged time
-        });
-
-        // Save the new payment document
-        await newPayment.save();
-        const user = await studentModel.findById(student); // Assuming student is the ID of the user
-
-        user.rechargedHours = (user.rechargedHours || 0) + timeRecharged; // Increment the recharged hours
-        await user.save(); // Save the updated user document
-
-        return next(CreateSuccess(200, "Payment added successfully", newPayment));
+      return next(CreateSuccess(200, "Payment added successfully", newPayment));
     } catch (error) {
-        console.error('Error adding payment:', error);
-        return next(CreateError(500, "Something went wrong while adding the payment"));
+      console.error("Error adding payment:", error);
+      return next(CreateError(500, "Something went wrong while adding the payment"));
     }
-},
+  },
 
   addExpense: async (req, res, next) => {
     try {
@@ -131,20 +121,20 @@ module.exports = {
   },
   getPayments: async (req, res, next) => {
     try {
-      const payments = await paymentModel.find({ isDeleted: false }).populate('studentId');
-      const formattedPayments = payments.map(payment => ({
+      const payments = await paymentModel.find({ isDeleted: false }).populate("studentId");
+      const formattedPayments = payments.map((payment) => ({
         orderId: payment.orderId,
-        studentId:payment.studentId,
-        studentName: payment.studentId.username, // Get only the student's name
-        planSelected:payment.planSelected,
+        studentId: payment.studentId,
+        studentName: payment.studentId.username,
+        planSelected: payment.planSelected,
         amountPaid: payment.amountPaid,
-        date: moment(payment.date).format('YYYY-MM-DD'), // Format the date
+        date: moment(payment.date).format("YYYY-MM-DD"),
         status: payment.status,
-        timeRecharged: payment.timeRecharged
-    }));
+        timeRecharged: payment.timeRecharged,
+      }));
 
-    console.log(formattedPayments);
-    return next(CreateSuccess(200, "Fetched payments successfully", formattedPayments));
+      console.log(formattedPayments);
+      return next(CreateSuccess(200, "Fetched payments successfully", formattedPayments));
     } catch (error) {
       return next(CreateError(500, "Something went wrong while fetching payments"));
     }
@@ -173,7 +163,6 @@ module.exports = {
     }
   },
   updateCourse: async (req, res, next) => {
-     //console.log(req.file);
     const { courseName, class: courseClass, subject, description, topic } = req.body;
     const courseId = req.params.id;
 
@@ -278,7 +267,7 @@ module.exports = {
     const paymentId = req.params.id;
 
     try {
-      const payment = await paymentModel.find({paymentId,isDeleted:false});
+      const payment = await paymentModel.find({ paymentId, isDeleted: false });
 
       if (!payment) {
         return next(CreateError(404, "Payment not found"));
@@ -316,49 +305,45 @@ module.exports = {
 
   deletePayment: async (req, res, next) => {
     try {
-        const { studentId,planSelected:planSelected } = req.body; // Extract orderId from the request body
+      const { studentId, planSelected: planSelected } = req.body;
 
-        const payment = await paymentModel.findOne({ studentId:studentId._id,planSelected:planSelected});
-        console.log(payment);
-        // Check if the payment exists
-        if (!payment) {
-            return next(CreateSuccess(200, "Payment not found"));
-        }
+      const payment = await paymentModel.findOne({ studentId: studentId._id, planSelected: planSelected });
+      console.log(payment);
+      if (!payment) {
+        return next(CreateSuccess(200, "Payment not found"));
+      }
+      payment.isDeleted = true;
+      await payment.save();
 
-        // Mark the payment as deleted
-        payment.isDeleted = true;
-        await payment.save(); // Save the updated payment document
-
-        return next(CreateSuccess(200, "Payment deleted successfully"));
+      return next(CreateSuccess(200, "Payment deleted successfully"));
     } catch (error) {
-        console.error('Error deleting payment:', error);
-        return next(CreateError(500, "Error deleting payment"));
+      console.error("Error deleting payment:", error);
+      return next(CreateError(500, "Error deleting payment"));
     }
-},
+  },
   dashboardData: async (req, res, next) => {
     try {
-         //console.log("Reached teh dashboard controller");
-      const students = await studentModel.find({isAdmin:false});
+      const students = await studentModel.find({ isAdmin: false });
       const tutors = await tutorModel.find();
       const totalRevenue = await paymentModel.aggregate([
         {
           $match: {
-            status: 'completed'
-          }
+            status: "completed",
+          },
         },
         {
           $group: {
             _id: null,
             totalAmount: {
-              $sum: '$amountPaid'
-            }
-          }
-        }
+              $sum: "$amountPaid",
+            },
+          },
+        },
       ]);
       const data = {
         students: students.length - 1,
         tutors: tutors.length,
-        totalRevenue: totalRevenue.length > 0 ? totalRevenue[0].totalAmount/1000 : 0
+        totalRevenue: totalRevenue.length > 0 ? totalRevenue[0].totalAmount / 1000 : 0,
       };
       return next(CreateSuccess(200, "Dashboard data fetched successfully", data));
     } catch (error) {
@@ -368,57 +353,53 @@ module.exports = {
 
   addFaq: async (req, res, next) => {
     try {
-        const { question, answer } = req.body; // Extract question and answer from the request body
+      const { question, answer } = req.body;
+      const newFaq = new FaqModel({
+        question,
+        answer,
+      });
+      await newFaq.save();
 
-        // Create a new FAQ document
-        const newFaq = new FaqModel({
-            question,
-            answer,
-        });
-
-        // Save the new FAQ document to the database
-        await newFaq.save();
-
-        return next(CreateSuccess(200, "FAQ added successfully", newFaq));
+      return next(CreateSuccess(200, "FAQ added successfully", newFaq));
     } catch (error) {
-        console.error('Error adding FAQ:', error);
-        return next(CreateError(500, "Something went wrong while adding the FAQ"));
+      console.error("Error adding FAQ:", error);
+      return next(CreateError(500, "Something went wrong while adding the FAQ"));
     }
-},
-getFaqs: async (req, res, next) => {
+  },
+  getFaqs: async (req, res, next) => {
     try {
-        const faqs = await FaqModel.find();
-        return next(CreateSuccess(200, "FAQs fetched successfully", faqs));
+      const faqs = await FaqModel.find();
+      return next(CreateSuccess(200, "FAQs fetched successfully", faqs));
     } catch (error) {
-        console.error('Error fetching FAQs:', error);
-        return next(CreateError(500, "Something went wrong while fetching the FAQs"));
+      console.error("Error fetching FAQs:", error);
+      return next(CreateError(500, "Something went wrong while fetching the FAQs"));
     }
-},
-deleteFaq: async (req, res, next) => {
+  },
+  deleteFaq: async (req, res, next) => {
     try {
-        const { faqId } = req.params.faqId; // Extract FAQ ID from the request parameters
-        const faq = await FaqModel.findByIdAndDelete(faqId); // Find and delete the FAQ by ID
-        if (!faq) {
-            return next(CreateError(404, "FAQ not found"));
-        }
-        return next(CreateSuccess(200, "FAQ deleted successfully", faq));
+      const { faqId } = req.params.faqId;
+      const faq = await FaqModel.findByIdAndDelete(faqId);
+      if (!faq) {
+        return next(CreateError(404, "FAQ not found"));
+      }
+      return next(CreateSuccess(200, "FAQ deleted successfully", faq));
     } catch (error) {
-        console.error('Error deleting FAQ:', error);
-        return next(CreateError(500, "Something went wrong while deleting the FAQ"));
+      console.error("Error deleting FAQ:", error);
+      return next(CreateError(500, "Something went wrong while deleting the FAQ"));
     }
-},
-updateFaq: async (req, res, next) => {
+  },
+  updateFaq: async (req, res, next) => {
     try {
-        const { faqId } = req.params; // Extract FAQ ID from the request parameters
-        const { question, answer } = req.body; // Extract question and answer from the request body
-        const faq = await FaqModel.findByIdAndUpdate(faqId, { question, answer }, { new: true }); // Find and update the FAQ by ID
-        if (!faq) {
-            return next(CreateError(404, "FAQ not found"));
-        }
-        return next(CreateSuccess(200, "FAQ updated successfully", faq));
+      const { faqId } = req.params;
+      const { question, answer } = req.body;
+      const faq = await FaqModel.findByIdAndUpdate(faqId, { question, answer }, { new: true });
+      if (!faq) {
+        return next(CreateError(404, "FAQ not found"));
+      }
+      return next(CreateSuccess(200, "FAQ updated successfully", faq));
     } catch (error) {
-        console.error('Error updating FAQ:', error);
-        return next(CreateError(500, "Something went wrong while updating the FAQ"));
+      console.error("Error updating FAQ:", error);
+      return next(CreateError(500, "Something went wrong while updating the FAQ"));
     }
-}
+  },
 };

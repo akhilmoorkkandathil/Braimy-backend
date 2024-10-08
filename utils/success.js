@@ -1,5 +1,4 @@
-module.exports = {
-     CreateSuccess(statusCode, successMessage, data, access_token){
+    export const CreateSuccess=(statusCode, successMessage, data, access_token)=>{
         const successObj = {
             success: [200,204,201].some(a=> a===statusCode)? true : false,
             status : statusCode,
@@ -9,4 +8,5 @@ module.exports = {
         };
         return successObj;
     }
-}
+
+

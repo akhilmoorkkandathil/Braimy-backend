@@ -1,5 +1,5 @@
-const { TopologyType } = require('mongodb');
-const mongoose = require('mongoose');
+import mongoose from "mongoose";
+const { Schema } = mongoose;
 
 const ExpenseSchema = mongoose.Schema({
   amountPaidTo: {
@@ -31,6 +31,6 @@ const ExpenseSchema = mongoose.Schema({
   },
 });
 
-const Expense = mongoose.model('Expense', ExpenseSchema);
+const expenceModel = mongoose.model('Expense', ExpenseSchema);
 
-module.exports = Expense;
+export default expenceModel;

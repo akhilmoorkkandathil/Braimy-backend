@@ -1,6 +1,5 @@
-const cloudinary = require('cloudinary').v2;
-//s3 bucket -presigned url
-require('dotenv').config();
+import { v2 as cloudinary } from 'cloudinary';
+import dotenv from 'dotenv';
 
 cloudinary.config({
   cloud_name: process.env.CLOUDNAME,
@@ -8,4 +7,4 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARYSECRET
 });
 
-module.exports = cloudinary
+export default cloudinary;

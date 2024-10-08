@@ -1,10 +1,11 @@
-const express = require('express');
-const userController = require('../controllers/userController');
-const checkUserStatus = require('../middlewares/userStatus');
-const checkCoordinatorBlockStatus = require('../middlewares/coordinatorStatus');
+import express from 'express';
+import userController from '../controllers/userController.js';
+import checkUserStatus from '../middlewares/userStatus.js';
+import checkCoordinatorBlockStatus from '../middlewares/coordinatorStatus.js';
+import upload from '../utils/multur.js';
+import authenticateToken from '../middlewares/authJWT.js';
+
 const userRouter = express.Router();
-const upload = require('../utils/multur');
-const authenticateToken = require('../middlewares/authJWT');
 
 userRouter.post('/register_user', userController.userRegister);
 userRouter.patch('/resend_otp',userController.resendOTP);
@@ -16,9 +17,7 @@ userRouter.post('/googleLogin',userController.googleLogin)
 userRouter.get('/getCourseData/:id',userController.getCourseData);
 userRouter.get('/searchCourses',userController.getCoursesData);
 userRouter.post('/saveUser',userController.saveUserData);
-
-//user coordinator and admin also
-userRouter.get('/getUsers',authenticateToken,userController.getUserList);
+ userRouter.get('/getUsers',authenticateToken,userController.getUserList);
 userRouter.post('/addStudent',authenticateToken, upload.single('image'),userController.addStudent);
 userRouter.patch('/blockStudent/:id',checkCoordinatorBlockStatus,userController.blockStudent);
 userRouter.patch('/unblockStudent/:id',checkCoordinatorBlockStatus,userController.unblockStudent);
@@ -26,9 +25,7 @@ userRouter.get('/getStudent/:id',authenticateToken,userController.getStudent);
 userRouter.post('/updateStudent/:id', upload.single('image'),userController.updateStudent);
 userRouter.post('/uploadProfilePhoto',authenticateToken,checkUserStatus,upload.single('image'),userController.uploadProfilePhoto);
 userRouter.post('/editProfileInfo',authenticateToken,checkUserStatus,userController.updateUserProfile)
-
-//userRouter.get('/getTutorUser',userController.getTutorUser);
-userRouter.post('/subscribe',userController.subscribe);
+ userRouter.post('/subscribe',userController.subscribe);
 userRouter.get('/blockStatus',authenticateToken, userController.blockStatus);
 userRouter.get('/getStudentClasses',authenticateToken, checkUserStatus ,userController.getStudentClasses);
 userRouter.post('/login',checkUserStatus,userController.userLogin);
@@ -42,7 +39,5 @@ userRouter.get('/fetchBucketCourses',authenticateToken,checkUserStatus,userContr
 userRouter.get('/fetchAllBucketCourses',authenticateToken,checkUserStatus,userController.fetchAllBucketCourses);
 userRouter.get('/fetchPaymentHistory',authenticateToken,checkUserStatus,userController.fetchPaymentHistory)
 
-module.exports = userRouter;
-
-///For tommorrow
-// complete the student fetch for tutores and updae the sideba
+export default userRouter;
+ 

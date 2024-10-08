@@ -1,47 +1,43 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 const { Schema } = mongoose;
-
-// Define the schema for storing user course schedules
-const userCourseBucketSchema = new Schema({
+ const userCourseBucketSchema = new Schema({
     userId: {
         type: Schema.Types.ObjectId,
         ref: 'User',
-        required: true // Ensure this field is required
+        required: true 
     },
     courseId: {
         type: Schema.Types.ObjectId,
-        ref: 'Course', // Reference to the Course collection/model
-        required: true // Ensure this field is required
+        ref: 'Course', 
+        required: true 
     },
     assignedTutor: {
         type: Schema.Types.ObjectId,
-        ref: 'Tutor', // Reference to the Tutor collection/model
-        required: false // Optional: Tutor assignment can be added later
+        ref: 'Tutor', 
+        required: false 
     },
     coordinatorId: {
         type: Schema.Types.ObjectId,
-        ref: 'Coordinator', // Reference to the Tutor collection/model
-        required: false // Optional: Tutor assignment can be added later
+        ref: 'Coordinator', 
+        required: false 
     },
     selectedDays: {
-        type: [String], // Array of strings to store selected days (e.g., 'Monday', 'Wednesday')
-        required: true // Ensure that at least one day is selected
+        type: [String], 
+        required: true 
     },
     preferredTime: {
-        type: String, // Time as a string (e.g., '10:00 AM')
-        required: true // Ensure this field is required
+        type: String, 
+        required: true 
     },
     classDuration: {
-        type: String, // Duration as a string (e.g., '1 hour')
-        required: true // Ensure this field is required
+        type: String, 
+        required: true 
     },
     createdAt: {
         type: Date,
-        default: Date.now // Automatically set creation date
+        default: Date.now 
     }
 });
+ const UserCourseBucket = mongoose.model('UserCourseBucket', userCourseBucketSchema);
 
-// Create the Mongoose model
-const UserCourseBucket = mongoose.model('UserCourseBucket', userCourseBucketSchema);
-
-module.exports = UserCourseBucket;
+export default UserCourseBucket;

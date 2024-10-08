@@ -1,8 +1,9 @@
-const tutorModel = require('../models/tutorModel');
-const commonMethods = require('../utils/commonMethods');
-const { CreateError } = require('../utils/error');
+import tutorModel from '../models/tutorModel.js';
+import commonMethods from '../utils/commonMethods.js';
+import { CreateError } from '../utils/error.js';
 
-const checkTutorStatus = async (req, res, next) => {
+
+export const checkTutorStatus = async (req, res, next) => {
     try {
 
       const token = req.headers.authorization;
@@ -19,4 +20,3 @@ const checkTutorStatus = async (req, res, next) => {
     }
 }
 
-module.exports = checkTutorStatus

@@ -1,31 +1,26 @@
-const cron = require('node-cron');
-const nodemailer = require('nodemailer');
-const UserCourseBucket = require('../models/userCourseBucketModel');
-const dotenv = require('dotenv');
+import cron from 'node-cron';
+import nodemailer from 'nodemailer';
+import UserCourseBucket from '../models/userCourseBucketModel.js';
+import dotenv from 'dotenv';
+
 
 
 dotenv.config();
-
-// Create a mail transporter (using Gmail for example)
-const transporter = nodemailer.createTransport({
+ const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: process.env.EMAIL_USER, // Replace with your email
-        pass: process.env.EMAIL_PASSWORD, // Replace with your password or app-specific password
+        user: process.env.EMAIL_USER, 
+        pass: process.env.EMAIL_PASSWORD, 
     },
 });
-
-// Function to send emails
-async function sendEmailsForClasses() {
-    const currentDay = new Date().toLocaleString('en-US', { weekday: 'short' }); // Get current day of the week (e.g., 'Monday')
+ async function sendEmailsForClasses() {
+    const currentDay = new Date().toLocaleString('en-US', { weekday: 'short' }); 
 
     try {
         const usersWithClasses = await UserCourseBucket.find({
             selectedDays: currentDay
         }).populate('userId courseId assignedTutor coordinatorId');
-
-        // Fetch users who have classes on the current day
-        usersWithClasses.forEach(async (bucket) => {
+         usersWithClasses.forEach(async (bucket) => {
             const { userId, courseId, preferredTime,assignedTutor, classDuration } = bucket;
         
             if(assignedTutor){
@@ -45,8 +40,7 @@ async function sendEmailsForClasses() {
                 };
             
                 try {
-                    // Send the email
-                    await transporter.sendMail(mailOptions);
+                     await transporter.sendMail(mailOptions);
                     console.log(`Email sent to ${userId.email}`);
                 } catch (error) {
                     console.error(`Failed to send email to ${userId.email}:`, error);
@@ -57,12 +51,10 @@ async function sendEmailsForClasses() {
         console.error('Error sending emails:', error);
     }
 }
-
-// Schedule the job to run at 7 AM every day
-cron.schedule('50 15 * * *', () => { // 25 minutes past 1 PM
+ cron.schedule('50 15 * * *', () => { 
     console.log('Running daily cron job at 1:25 PM');
     sendEmailsForClasses();
 }, {
-    timezone: 'Asia/Kolkata' // Set to your local time zone if needed
+    timezone: 'Asia/Kolkata' 
 });
 

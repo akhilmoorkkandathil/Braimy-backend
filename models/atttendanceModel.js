@@ -1,44 +1,40 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 const { Schema } = mongoose;
-
-// Define the schema for storing completed classes
-const completedClassSchema = new Schema({
+ const completedClassSchema = new Schema({
     studentId: {
         type: Schema.Types.ObjectId,
-        ref: 'User', // Reference to the User collection/model
+        ref: 'User', 
         required: true
     },
     tutorId: {
         type: Schema.Types.ObjectId,
-        ref: 'Tutor', // Reference to the Tutor collection/model
+        ref: 'Tutor', 
         required: true
     },
     courseId: {
         type: Schema.Types.ObjectId,
-        ref: 'Course', // Reference to the Course collection/model
+        ref: 'Course', 
         required: true
     },
     coordinatorId: {
         type: Schema.Types.ObjectId,
-        ref: 'Coordinator', // Reference to the Course collection/model
+        ref: 'Coordinator', 
         required: true
     },
     duration: {
-        type: String, // Duration as a string (e.g., '1 hour')
+        type: String, 
         required: true
     },
     date: {
         type: Date,
-        default: Date.now // Automatically set the date when marked completed
+        default: Date.now 
     },
     status: {
         type: String,
-        enum: ['Pending', 'Approved'], // Only allow 'pending' or 'approved'
-        default: 'Pending' // Default status
+        enum: ['Pending', 'Approved'], 
+        default: 'Pending' 
     }
 });
+ const CompletedClassModel = mongoose.model('CompletedClass', completedClassSchema);
 
-// Create the Mongoose model
-const CompletedClass = mongoose.model('CompletedClass', completedClassSchema);
-
-module.exports = CompletedClass;
+export default CompletedClassModel;

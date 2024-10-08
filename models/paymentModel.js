@@ -1,5 +1,6 @@
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
+import mongoose from "mongoose";
+const { Schema } = mongoose;
+
 
 
 const PaymentSchema = mongoose.Schema({
@@ -35,6 +36,6 @@ timeRecharged:{
 }
 });
 
-const Payment = mongoose.model('Payment', PaymentSchema);
+const paymentModel = mongoose.model('Payment', PaymentSchema);
 
-module.exports = Payment;
+export default paymentModel;

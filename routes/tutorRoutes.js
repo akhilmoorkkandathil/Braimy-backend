@@ -1,10 +1,10 @@
-const express = require('express');
-const tutorController = require('../controllers/tutorController');
-const upload = require('../utils/multur');
-const authenticateToken = require('../middlewares/authJWT');
-const checkTutorStatus = require('../middlewares/tutorStatus');
-const tutorRoute = express.Router();
+import express from 'express';
+import {tutorController} from '../controllers/tutorController.js';
+import upload from '../utils/multur.js';
+import authenticateToken from '../middlewares/authJWT.js';
+import {checkTutorStatus} from '../middlewares/tutorStatus.js';
 
+const tutorRoute = express.Router();
 
 
 tutorRoute.post('/register_tutor', tutorController.tutorRegister);
@@ -34,4 +34,4 @@ tutorRoute.post('/editProfileInfo',authenticateToken,checkTutorStatus,tutorContr
 
 
 
-module.exports = tutorRoute;
+export default tutorRoute;

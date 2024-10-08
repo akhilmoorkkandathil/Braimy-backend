@@ -1,5 +1,6 @@
-const coordinatorModel = require('../models/coordinatorModel');
-const { CreateError } = require('../utils/error');
+import coordinatorModel from '../models/coordinatorModel.js';
+import { CreateError } from '../utils/error.js';
+
 
 const checkCoordinatorBlockStatus = async (req, res, next) => {
     try {
@@ -15,4 +16,4 @@ const checkCoordinatorBlockStatus = async (req, res, next) => {
     }
 }
 
-module.exports = checkCoordinatorBlockStatus;
+export default checkCoordinatorBlockStatus;

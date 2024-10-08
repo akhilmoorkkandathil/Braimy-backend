@@ -1,4 +1,6 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
+const { Schema } = mongoose;
+
 
 const CoordinatorSchema = mongoose.Schema({
     username:{
@@ -40,8 +42,6 @@ const CoordinatorSchema = mongoose.Schema({
         type:String
     }
 });
+ const coordinatorModel= mongoose.model('Coordinator',CoordinatorSchema);
 
-//export default mongoose.model('User', userSchema);
-const Coordinator= mongoose.model('Coordinator',CoordinatorSchema);
-
-module.exports = Coordinator;
+export default coordinatorModel;

@@ -31,6 +31,7 @@
     "dev": "nodemon app.js"
   },
   "author": "Akhil M",
+  "type":"module",
   "license": "ISC",
   "devDependencies": {
     "@eslint/js": "^9.8.0",

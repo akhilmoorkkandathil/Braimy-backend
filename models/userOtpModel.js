@@ -1,4 +1,5 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
+const { Schema } = mongoose;
 
 const userOtpSchema = mongoose.Schema({
     userId: {
@@ -19,6 +20,6 @@ const userOtpSchema = mongoose.Schema({
 });
 userOtpSchema.index({ createdAt: 1 }, { expireAfterSeconds: 60 });
 
-const UserOtp= mongoose.model('UserOtp',userOtpSchema);
+const userOtpModel= mongoose.model('UserOtp',userOtpSchema);
 
-module.exports = UserOtp;
+export default userOtpModel;

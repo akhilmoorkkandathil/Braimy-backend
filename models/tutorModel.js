@@ -1,4 +1,5 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
+const { Schema } = mongoose;
 
 const tutorSchema = mongoose.Schema({
     username:{
@@ -39,6 +40,5 @@ const tutorSchema = mongoose.Schema({
         type:String
     }
 });
-
-const Tutor= mongoose.model('Tutor',tutorSchema);
-module.exports = Tutor;
+ const tutorModel= mongoose.model('Tutor',tutorSchema);
+ export default tutorModel;

@@ -1,22 +1,22 @@
-const express = require('express');
-const coordintorController = require('../controllers/coordinatorController');
-const coordinatorController = require('../controllers/coordinatorController');
-const checkCoordinatorBlockStatus = require('../middlewares/coordinatorStatus');
-const authenticateToken = require('../middlewares/authJWT');
-const upload = require('../utils/multur');
+import express from 'express';
+import {coordinatorController} from '../controllers/coordinatorController.js';
+import checkCoordinatorBlockStatus from '../middlewares/coordinatorStatus.js';
+import authenticateToken from '../middlewares/authJWT.js';
+import upload from '../utils/multur.js';
+
 const coordinatorRouter = express.Router();
 
 
-coordinatorRouter.post('/register_coordinator',coordintorController.coordinatorRegister );
-coordinatorRouter.post('/login',coordintorController.coordinatorLogin);
-coordinatorRouter.get('/getCoordinators',coordintorController.getCoordinatorsList);
-coordinatorRouter.post('/addCoordinator',authenticateToken,coordintorController.addCoordinator);
-coordinatorRouter.patch('/blockCoordinator/:id',authenticateToken, coordintorController.blockCoordinator);
-coordinatorRouter.patch('/verifyCoordinator/:id',authenticateToken, coordintorController.verifyCoordinator);
-coordinatorRouter.patch('/unblockCoordinator/:id',authenticateToken, coordintorController.unblockCoordinator);
-coordinatorRouter.delete('/deleteCoordinator/:id',authenticateToken, coordintorController.deleteCoordinator);
-coordinatorRouter.get('/getCoordinator/:id',authenticateToken, coordintorController.getCoordinator);
-coordinatorRouter.put('/updateCoordinator/:id',authenticateToken, coordintorController.updateCoordinator);
+coordinatorRouter.post('/register_coordinator',coordinatorController.coordinatorRegister );
+coordinatorRouter.post('/login',coordinatorController.coordinatorLogin);
+coordinatorRouter.get('/getCoordinators',coordinatorController.getCoordinatorsList);
+coordinatorRouter.post('/addCoordinator',authenticateToken,coordinatorController.addCoordinator);
+coordinatorRouter.patch('/blockCoordinator/:id',authenticateToken, coordinatorController.blockCoordinator);
+coordinatorRouter.patch('/verifyCoordinator/:id',authenticateToken, coordinatorController.verifyCoordinator);
+coordinatorRouter.patch('/unblockCoordinator/:id',authenticateToken, coordinatorController.unblockCoordinator);
+coordinatorRouter.delete('/deleteCoordinator/:id',authenticateToken, coordinatorController.deleteCoordinator);
+coordinatorRouter.get('/getCoordinator/:id',authenticateToken, coordinatorController.getCoordinator);
+coordinatorRouter.put('/updateCoordinator/:id',authenticateToken, coordinatorController.updateCoordinator);
 coordinatorRouter.post('/manageStudent',authenticateToken,coordinatorController.manageStudent);
 coordinatorRouter.get('/todaysClasses',authenticateToken,checkCoordinatorBlockStatus,coordinatorController.todaysClasses);
 coordinatorRouter.get('/upcomingClasses',authenticateToken,checkCoordinatorBlockStatus,coordinatorController.upcomingClasses);
@@ -29,10 +29,12 @@ coordinatorRouter.post('/addCourseToUserBucket/:studentId',authenticateToken,che
 coordinatorRouter.post('/updateCourseToUserBucket/:studentId',authenticateToken,checkCoordinatorBlockStatus,coordinatorController.updateCourseToUserBucket);
 coordinatorRouter.delete('/removeFromBucket/:studentId/:courseId',authenticateToken,checkCoordinatorBlockStatus,coordinatorController.removeFromBucket)
 coordinatorRouter.get('/getBucketCourse/:studentId/:courseId',authenticateToken,checkCoordinatorBlockStatus,coordinatorController.getBucketCourse);
-coordinatorRouter.post('/uploadCoordinatorProfilePhoto',authenticateToken,checkCoordinatorBlockStatus,upload.single('image'),coordintorController.uploadCoordinatorProfilePhoto);
+coordinatorRouter.post('/uploadCoordinatorProfilePhoto',authenticateToken,checkCoordinatorBlockStatus,upload.single('image'),coordinatorController.uploadCoordinatorProfilePhoto);
 coordinatorRouter.get('/getCoordinatorData',authenticateToken,checkCoordinatorBlockStatus,coordinatorController.getCoordinatorData);
-coordinatorRouter.post('/editCoordinatorProfileInfo',authenticateToken,checkCoordinatorBlockStatus,coordintorController.editCoordinatorProfileInfo);
-coordinatorRouter.get('/getAllCompletedClasses',authenticateToken,checkCoordinatorBlockStatus,coordintorController.getAllCompletedClasses)
+coordinatorRouter.post('/editCoordinatorProfileInfo',authenticateToken,checkCoordinatorBlockStatus,coordinatorController.editCoordinatorProfileInfo);
+coordinatorRouter.get('/getAllCompletedClasses',authenticateToken,checkCoordinatorBlockStatus,coordinatorController.getAllCompletedClasses)
 coordinatorRouter.get('/approveClass/:id',authenticateToken,checkCoordinatorBlockStatus,coordinatorController.approveClass);
 
-module.exports = coordinatorRouter;
+
+
+export default coordinatorRouter;
