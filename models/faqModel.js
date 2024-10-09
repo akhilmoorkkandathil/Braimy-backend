@@ -5,7 +5,7 @@ const { Schema } = mongoose;
 const FaqSchema = new Schema({
     question: {
         type: String,
-        required: true, //
+        required: true, 
     },
     answer: {
         type: String,
